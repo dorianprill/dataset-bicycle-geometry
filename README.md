@@ -1,6 +1,6 @@
 # Bicycle Geometry Data Set
 
-This repository contains the code used to extract a bicycle geometry data set from the `geometrics.mtb-news.de` website. An example dump is available as `.csv` and `.arrow` files in the `data` directory but it may be outdated.
+This repository contains the code used to extract a bicycle geometry data set from the `geometrics.mtb-news.de` website. An example dump is available as `.csv` and `.arrow` files in the `data` directory. I am updating the data dump from time to time but if you want more recent data, scrape it yourself with the povided script.
 
 ## Setup & Run
 
@@ -59,14 +59,15 @@ columns = [
 
 Multiple variants may be recorded for each model. Variants depend mostly on `Frame Size`, `Frame Config`, `Wheel Size`, `Suspension Travel (rear)`, `Suspension Travel (front)`.
 
-Many of the columns are self-explanatory if you are into bikes. There may be many `null`s in the numeric columns since not every manfuacturer states all of the values and it is also category specific. Some of these values can be computed with simple geometry.
+Most of the columns are self-explanatory if you are into bikes. There may be many `null`s in the numeric columns since different manfuacturers may use a slightly different set of values and some values are normally only stated for a certain category of bikes.  
+Some of these values can be computed with simple geometry.
 
 The `URL` column contains the URL of the page from which the data was extracted. The last number in the URL is the database ID of the bike.
 
-## Inspiration
+## Ideas
 
+- Plot a facet grid of scatterplots for stack/reach vs other variables of a certain class of bikes (e.g. Mountain).
 - Plot the median head tube angle of a certain class of bikes (e.g. > 140 mm rear travel MTBs) as a line chart over the years.
-- Plot a facet grid of stack or reach of a certain class of bikes (e.g. > 140 mm rear travel MTBs) as a line chart over the years.
 - Plot histograms of some geometry values for a certain class of bikes (e.g. <= 130 mm rear travel MTBs) over the years.
 - Manufacturer sizing is very arbitrary. Develop a model for sizing based on variables stack and reach. Find a relationship using a scatterplot and some regression model
 - Try to predict the category of a bike given only a limited set of geometry values.

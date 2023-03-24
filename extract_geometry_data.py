@@ -18,14 +18,7 @@ bike_api_url = 'https://geometrics.mtb-news.de/api/bikes?variants='
 # bikes are nested in lists named "mtbnews-geometry__bike-list" (0-9, A-Z) under the entry_url
 target_class_list = 'mtbnews-geometry__bike-list'
 
-savename = '/data/geometrics.mtb-news.de'
-
-# Get the page
-page = requests.get(entry_url)
-soup = BeautifulSoup(page.content, 'html.parser')
-
-# select the bike sublists (0-9, A-Z)
-sublists = soup.find_all('ul', attrs={'class':target_class_list})
+savename = './data/geometrics.mtb-news.de'
 
 # the desired columns
 columns = [
@@ -71,27 +64,27 @@ dtypes = [
     pl.Utf8, 
     pl.Utf8, 
     pl.Utf8, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Float64, 
-    pl.Int64, 
-    pl.Int64
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32, 
+    pl.Float32
 ] 
 
 # create empty entry dict
@@ -109,8 +102,18 @@ category_map = {
     'Sonstiges':'Other', # rare
 }
 
+
+### GO SCRAPE ###
+
+# Get the page
+page = requests.get(entry_url)
+soup = BeautifulSoup(page.content, 'html.parser')
+
+# select the bike sublists (0-9, A-Z)
+sublists = soup.find_all('ul', attrs={'class':target_class_list})
+
 # follow links to individual bikes (default tab on load lists all bike categories)
-for i, ul in enumerate(sublists):
+for ul in sublists:
 
     # for all bike entries in the sublists
     for li in ul.find_all('li'):
@@ -119,12 +122,19 @@ for i, ul in enumerate(sublists):
         sleep(0.3)
 
         # follow href to individual bike page 
-        bikeurl = li.find('a').get('href')
+        bikeurl = li.find('span').find('a').get('href')
         bikepage = requests.get(bikeurl)
         bikesoup = BeautifulSoup(bikepage.content, 'html.parser')
         
-        # find detail table link
-        table_url = bikesoup.find('a', attrs={'class':'btn btn-primary'}).get('href')
+        # find detail table link from button with text 'Diese Geometrien untereinander vergleichen'
+        # currently there is only one btn-primary on the page, but this might change in the future
+        button = bikesoup.find('a', attrs={'class':'btn btn-primary'})
+
+        if button is None or ' '.join(button.get_text().split()) != 'Diese Geometrien untereinander vergleichen':
+            print('No button for detail table found - skipping')
+            continue
+
+        table_url = button.get('href')
         
         # and disassemble it to get the bike IDs for the API call
         # (we're going to call the detail table api directly, as it's easier than waiting for XHR to finish with bs4/selenium)
@@ -138,8 +148,17 @@ for i, ul in enumerate(sublists):
             f'Assembled API:\t{api_call}\n'
         )
 
-        model_variants = biketable.json()['data']
-
+        # get the dict from json 
+        # if the bike is listed but has no data yet/no variants exist -> loop will be skipped
+        # bikes that do have data but are not yet marked as published or are not 
+        # reviewed, marked (a::after is GESUCHT or ENTWURF), are not included
+        model_variants = []
+        try:
+            model_variants = biketable.json()['data']
+        except Exception as e:
+            print(f'No variants found for {bikeurl} because of {e} - skipping')
+            continue
+        
         for entry in model_variants:
 
             # prints full json for every variant - verbose!
@@ -179,11 +198,9 @@ for i, ul in enumerate(sublists):
 
 
 # construct data frame from dict
-# we're going to infer the schema from all samples for now, change this if the databae grows
-df = pl.DataFrame(data=data, infer_schema_length=len(data['Model']))
-# my original schema had many int columns but failed on some bike models 
-# because float values start to appear later on - should work now
-# df = pl.DataFrame(data=data, schema=schema) 
+# we're going to infer the schema from all samples for a start, change this if the database grows
+#df = pl.DataFrame(data=data, infer_schema_length=len(data['Model']))
+df = pl.DataFrame(data=data, schema=schema) 
 print(df.head())
 print(df.dtypes)
 df.write_csv(savename+'.csv', sep=';')
