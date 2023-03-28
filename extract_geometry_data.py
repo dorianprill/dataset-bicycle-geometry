@@ -58,7 +58,7 @@ dtypes = [
     pl.Utf8, 
     pl.Utf8, 
     pl.Utf8, 
-    pl.Utf8, 
+    pl.Int32, 
     pl.Utf8, 
     pl.Boolean, 
     pl.Utf8, 
