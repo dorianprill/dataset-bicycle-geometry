@@ -64,17 +64,27 @@ Some of these values can be computed with simple geometry.
 
 The `URL` column contains the URL of the page from which the data was extracted. The last number in the URL is the database ID of the bike.
 
-## Ideas
+## Data Cleaning
 
-- Plot a facet grid of scatterplots for stack/reach vs other variables of a certain class of bikes (e.g. Mountain).
-- Plot the median head tube angle of a certain class of bikes (e.g. > 140 mm rear travel MTBs) as a line chart over the years.
-- Plot histograms of some geometry values for a certain class of bikes (e.g. <= 130 mm rear travel MTBs) over the years.
+Some geometry values are not as significant or commonly stated as others. It is an easy exercise to find out which, even if you are not familiar with bikes. 
+Those columns can likely be dropped in most cases. 
+The dataset has a handful of samples with extreme values in some columns, but not all of them are true outliers! Some of them are kids bikes and some of them are from faulty database entries. 
+
+I will ususally report any errors I find on the website. But it is a good exercise to find them and then manually check if it is indeed an outlier or not. 
+
+For bikes with kinked seat tubes, only the effective seat tube angle makes sense. For bikes with a straight seat tube, both effective and real angles are the same. You can use this to impute values for `Seat Tube Angle Effective` where it is missing but the `Seat Tube Angle Real` is given.
+
+## Ideas for Visualization and Modeling
+
+- Create a paired scatter plot grid (e.g. 4x4) for the columns with the most data points, color them by category and see which pairs separate the clusters best.
+- Plot mean/median of a set of geometry values for category `Mountain` (most samples) as a line chart over the years.
+- Plot faceted histograms of e.g. `Head Tube Angle` for each category of bike.
 - Manufacturer sizing is very arbitrary. Develop a model for sizing based on variables stack and reach. Find a relationship using a scatterplot and some regression model
 - Try to predict the category of a bike given only a limited set of geometry values.
-- Try to predict the model year given only a limited set of geometry values.
+- Try to predict the model year given only a limited set of geometry values and category.
 - Try to predict the suspension travel given only a limited set of geometry values.
 
 ## Errata
 
-The API currently has no category for electric bikes. It has a variable `has_motor` but it is always false. This is probably a bug in the API or not recorded in the database (yet).  
+The API currently has no category for electric bikes. It has a variable `has_motor` but it is always `False`. This is probably a bug in the API or not recorded in the database (yet).  
 I have included it in the data set as `Motorized` for future-proofing but you can safely drop it for now.
