@@ -113,3 +113,6 @@ dmypy.json
 # CUSTOM
 # /data/*.csv
 
+# lockfiles
+*.lock*
+
