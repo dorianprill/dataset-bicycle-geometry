@@ -11,7 +11,7 @@ from time import sleep
 from bs4 import BeautifulSoup
 import polars as pl
 
-entry_url = 'https://geometrics.mtb-news.de/'
+entry_url = 'https://geometrics.mtb-news.de/bikes'
 # call api directly e.g. https://geometrics.mtb-news.de/api/bikes?variants=4453,4454,4455,4456,4457,4458
 # (easier than waiting for xhr to finish)
 bike_api_url = 'https://geometrics.mtb-news.de/api/bikes?variants='
@@ -106,15 +106,23 @@ category_map = {
 ### GO SCRAPE ###
 
 # Get the page
-page = requests.get(entry_url)
+try: 
+    page = requests.get(entry_url)
+except Exception as e:
+    print(f'Could not fetch {entry_url} because of {e}')
+    exit(1)
+
 soup = BeautifulSoup(page.content, 'html.parser')
 
-# select the bike sublists (0-9, A-Z)
+# select the bike manufacturer starting letter sublists (0-9, A-Z)
 sublists = soup.find_all('ul', attrs={'class':target_class_list})
+
+
+
 
 # follow links to individual bikes (default tab on load lists all bike categories)
 for ul in sublists:
-
+    # print(ul.find_all('li'))
     # for all bike entries in the sublists
     for li in ul.find_all('li'):
 
@@ -122,7 +130,7 @@ for ul in sublists:
         sleep(0.3)
 
         # follow href to individual bike page 
-        bikeurl = li.find('span').find('a').get('href')
+        bikeurl = li.find('a').get('href')
         bikepage = requests.get(bikeurl)
         bikesoup = BeautifulSoup(bikepage.content, 'html.parser')
         
@@ -199,8 +207,8 @@ for ul in sublists:
 
 # construct data frame from dict
 # we're going to infer the schema from all samples for a start, change this if the database grows
-#df = pl.DataFrame(data=data, infer_schema_length=len(data['Model']))
-df = pl.DataFrame(data=data, schema=schema) 
+df = pl.DataFrame(data=data, infer_schema_length=len(data['Model']))
+#df = pl.DataFrame(data=data, schema=schema) 
 print(df.head())
 print(df.dtypes)
 df.write_csv(savename+'.csv', sep=';')
